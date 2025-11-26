@@ -1,21 +1,55 @@
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { api } from "@/lib/api";
-import { Star, MapPin, Wifi, Coffee, Car, Dumbbell, ArrowLeft } from "lucide-react";
+import { Star, MapPin, Wifi, Coffee, Car, Dumbbell, ArrowLeft, Calendar as CalendarIcon, Users } from "lucide-react";
 import { Link } from "react-router-dom";
+import { format, differenceInDays } from "date-fns";
+import { cn } from "@/lib/utils";
 
 const HotelDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const [checkIn, setCheckIn] = useState<Date>();
+  const [checkOut, setCheckOut] = useState<Date>();
+  const [guests, setGuests] = useState(1);
   
   const { data: hotel, isLoading, error } = useQuery({
     queryKey: ['hotel', id],
     queryFn: () => api.getHotelById(Number(id)),
     enabled: !!id,
   });
+
+  const calculateTotalPrice = () => {
+    if (!checkIn || !checkOut || !hotel) return 0;
+    const nights = differenceInDays(checkOut, checkIn);
+    return nights * hotel.price;
+  };
+
+  const handleBooking = () => {
+    if (!checkIn || !checkOut || !hotel) {
+      return;
+    }
+    
+    navigate('/booking/confirm', {
+      state: {
+        hotel,
+        checkIn: format(checkIn, "yyyy-MM-dd"),
+        checkOut: format(checkOut, "yyyy-MM-dd"),
+        guests,
+        totalPrice: calculateTotalPrice(),
+      }
+    });
+  };
+
+  const isBookingValid = checkIn && checkOut && checkIn < checkOut;
 
   const amenityIcons: Record<string, any> = {
     wifi: Wifi,
@@ -149,7 +183,103 @@ const HotelDetail = () => {
                 </div>
               </div>
 
-              <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-6">
+              {/* Booking Form */}
+              <div className="space-y-4 mb-6">
+                {/* Check-in Date */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Check-in</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !checkIn && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {checkIn ? format(checkIn, "PPP") : "Select date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={checkIn}
+                        onSelect={setCheckIn}
+                        disabled={(date) => date < new Date()}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Check-out Date */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Check-out</label>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className={cn(
+                          "w-full justify-start text-left font-normal",
+                          !checkOut && "text-muted-foreground"
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {checkOut ? format(checkOut, "PPP") : "Select date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={checkOut}
+                        onSelect={setCheckOut}
+                        disabled={(date) => !checkIn || date <= checkIn}
+                        initialFocus
+                        className="pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
+
+                {/* Guests */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Guests</label>
+                  <div className="relative">
+                    <Users className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      type="number"
+                      min="1"
+                      value={guests}
+                      onChange={(e) => setGuests(parseInt(e.target.value) || 1)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Price Summary */}
+              {checkIn && checkOut && (
+                <div className="bg-muted p-4 rounded-lg mb-4 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">
+                      ${hotel.price} x {differenceInDays(checkOut, checkIn)} nights
+                    </span>
+                    <span className="font-medium">${calculateTotalPrice()}</span>
+                  </div>
+                  <div className="border-t border-border pt-2 flex justify-between">
+                    <span className="font-semibold">Total</span>
+                    <span className="font-bold text-primary">${calculateTotalPrice()}</span>
+                  </div>
+                </div>
+              )}
+
+              <Button 
+                onClick={handleBooking}
+                disabled={!isBookingValid}
+                className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-lg py-6"
+              >
                 Book Now
               </Button>
 

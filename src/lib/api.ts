@@ -23,6 +23,32 @@ export interface SearchFilters {
   maxPrice?: number;
 }
 
+export interface Booking {
+  id?: number;
+  hotelId: number;
+  hotelName?: string;
+  guestName: string;
+  guestEmail: string;
+  guestPhone: string;
+  checkIn: string;
+  checkOut: string;
+  guests: number;
+  totalPrice: number;
+  status?: string;
+  createdAt?: string;
+}
+
+export interface BookingRequest {
+  hotelId: number;
+  guestName: string;
+  guestEmail: string;
+  guestPhone: string;
+  checkIn: string;
+  checkOut: string;
+  guests: number;
+  totalPrice: number;
+}
+
 // API functions
 export const api = {
   // Fetch all hotels
@@ -63,6 +89,45 @@ export const api = {
     
     if (!response.ok) {
       throw new Error('Failed to search hotels');
+    }
+    
+    return response.json();
+  },
+
+  // Create booking
+  createBooking: async (booking: BookingRequest): Promise<Booking> => {
+    const response = await fetch(`${API_BASE_URL}/bookings`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(booking),
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to create booking');
+    }
+    
+    return response.json();
+  },
+
+  // Get booking by ID
+  getBookingById: async (id: number): Promise<Booking> => {
+    const response = await fetch(`${API_BASE_URL}/bookings/${id}`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch booking');
+    }
+    
+    return response.json();
+  },
+
+  // Get all bookings
+  getBookings: async (): Promise<Booking[]> => {
+    const response = await fetch(`${API_BASE_URL}/bookings`);
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch bookings');
     }
     
     return response.json();
