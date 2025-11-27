@@ -58,16 +58,33 @@ const BookingConfirm = () => {
   }, [user, navigate]);
 
   const bookingMutation = useMutation({
-    mutationFn: () => api.createBooking({
-      hotelId: state.hotel.id,
-      guestName,
-      guestEmail,
-      guestPhone,
-      checkIn: state.checkIn,
-      checkOut: state.checkOut,
-      guests: state.guests,
-      totalPrice: state.totalPrice,
-    }),
+    mutationFn: async () => {
+      if (!user) throw new Error("User not authenticated");
+
+      const { data, error } = await supabase
+        .from("bookings")
+        .insert({
+          user_id: user.id,
+          hotel_id: state.hotel.id,
+          hotel_name: state.hotel.name,
+          hotel_image: state.hotel.image,
+          hotel_city: state.hotel.city,
+          hotel_country: state.hotel.country,
+          guest_name: guestName,
+          guest_email: guestEmail,
+          guest_phone: guestPhone,
+          check_in: state.checkIn,
+          check_out: state.checkOut,
+          guests: state.guests,
+          total_price: state.totalPrice,
+          status: "confirmed",
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
     onSuccess: (data) => {
       navigate('/booking/success', {
         state: {
@@ -78,8 +95,8 @@ const BookingConfirm = () => {
     },
     onError: (error) => {
       toast({
-        title: "Booking Failed",
-        description: error instanceof Error ? error.message : "Failed to create booking",
+        title: "예약 실패",
+        description: error instanceof Error ? error.message : "예약 생성에 실패했습니다",
         variant: "destructive",
       });
     },
