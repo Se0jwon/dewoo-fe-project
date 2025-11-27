@@ -5,8 +5,33 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { CheckCircle2, Calendar, Users, Mail, Phone, MapPin } from "lucide-react";
-import { format } from "date-fns";
-import { Booking, Hotel } from "@/lib/api";
+import { format, parseISO } from "date-fns";
+
+interface Booking {
+  id: string;
+  hotel_id: number;
+  hotel_name: string;
+  hotel_image: string | null;
+  hotel_city: string | null;
+  hotel_country: string | null;
+  guest_name: string;
+  guest_email: string;
+  guest_phone: string;
+  check_in: string;
+  check_out: string;
+  guests: number;
+  total_price: number;
+  status: string;
+}
+
+interface Hotel {
+  id: number;
+  name: string;
+  address: string;
+  image: string;
+  city: string;
+  country: string;
+}
 
 interface LocationState {
   booking: Booking;
@@ -93,7 +118,7 @@ const BookingSuccess = () => {
                     <div>
                       <div className="font-medium mb-1">Check-in</div>
                       <div className="text-sm text-muted-foreground">
-                        {format(new Date(booking.checkIn), "PPP")}
+                        {format(parseISO(booking.check_in), "PPP")}
                       </div>
                     </div>
                   </div>
@@ -103,7 +128,7 @@ const BookingSuccess = () => {
                     <div>
                       <div className="font-medium mb-1">Check-out</div>
                       <div className="text-sm text-muted-foreground">
-                        {format(new Date(booking.checkOut), "PPP")}
+                        {format(parseISO(booking.check_out), "PPP")}
                       </div>
                     </div>
                   </div>
@@ -120,7 +145,7 @@ const BookingSuccess = () => {
 
                   <div className="flex items-start gap-3 p-4 bg-muted rounded-lg">
                     <Badge className="text-base px-4 py-2 mt-1">
-                      ${booking.totalPrice}
+                      ${booking.total_price.toLocaleString()}
                     </Badge>
                     <div>
                       <div className="font-medium mb-1">Total Price</div>
@@ -144,7 +169,7 @@ const BookingSuccess = () => {
                     </div>
                     <div>
                       <div className="text-sm text-muted-foreground">Email</div>
-                      <div className="font-medium">{booking.guestEmail}</div>
+                      <div className="font-medium">{booking.guest_email}</div>
                     </div>
                   </div>
 
@@ -154,7 +179,7 @@ const BookingSuccess = () => {
                     </div>
                     <div>
                       <div className="text-sm text-muted-foreground">Phone</div>
-                      <div className="font-medium">{booking.guestPhone}</div>
+                      <div className="font-medium">{booking.guest_phone}</div>
                     </div>
                   </div>
                 </div>
@@ -179,7 +204,7 @@ const BookingSuccess = () => {
           {/* Confirmation Email Notice */}
           <div className="mt-8 p-4 bg-muted rounded-lg text-center">
             <p className="text-sm text-muted-foreground">
-              A confirmation email has been sent to <span className="font-medium text-foreground">{booking.guestEmail}</span>
+              A confirmation email has been sent to <span className="font-medium text-foreground">{booking.guest_email}</span>
             </p>
           </div>
         </div>

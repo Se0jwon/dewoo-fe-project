@@ -26,6 +26,11 @@ export const Navbar = () => {
       <Link to="/hotels" className="text-foreground hover:text-primary transition-colors font-medium">
         Hotels
       </Link>
+      {user && (
+        <Link to="/my-bookings" className="text-foreground hover:text-primary transition-colors font-medium">
+          My Bookings
+        </Link>
+      )}
       <Link to="/about" className="text-foreground hover:text-primary transition-colors font-medium">
         About
       </Link>
@@ -64,6 +69,10 @@ export const Navbar = () => {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => navigate("/my-bookings")}>
+                    <User className="mr-2 h-4 w-4" />
+                    나의 예약
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/profile")}>
                     <User className="mr-2 h-4 w-4" />
                     프로필
@@ -96,6 +105,17 @@ export const Navbar = () => {
                 <NavLinks />
                 {user ? (
                   <>
+                    <Button 
+                      variant="outline" 
+                      className="w-full"
+                      onClick={() => {
+                        navigate("/my-bookings");
+                        setIsOpen(false);
+                      }}
+                    >
+                      <User className="mr-2 h-4 w-4" />
+                      나의 예약
+                    </Button>
                     <Button 
                       variant="outline" 
                       className="w-full"
