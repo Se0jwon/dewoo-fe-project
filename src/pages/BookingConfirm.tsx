@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { useMutation } from "@tanstack/react-query";
 import { Navbar } from "@/components/Navbar";
@@ -11,6 +11,8 @@ import { api, Hotel } from "@/lib/api";
 import { ArrowLeft, Calendar, Users, Mail, Phone, User } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface LocationState {
   hotel: Hotel;
@@ -24,11 +26,36 @@ const BookingConfirm = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const state = location.state as LocationState;
 
   const [guestName, setGuestName] = useState("");
   const [guestEmail, setGuestEmail] = useState("");
   const [guestPhone, setGuestPhone] = useState("");
+
+  useEffect(() => {
+    if (!user) {
+      navigate("/auth");
+      return;
+    }
+
+    // Load user profile data
+    const loadProfile = async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("*")
+        .eq("id", user.id)
+        .single();
+
+      if (data) {
+        setGuestName(data.full_name || "");
+        setGuestEmail(data.email || user.email || "");
+        setGuestPhone(data.phone || "");
+      }
+    };
+
+    loadProfile();
+  }, [user, navigate]);
 
   const bookingMutation = useMutation({
     mutationFn: () => api.createBooking({

@@ -13,10 +13,13 @@ import { Star, MapPin, Wifi, Coffee, Car, Dumbbell, ArrowLeft, Calendar as Calen
 import { Link } from "react-router-dom";
 import { format, differenceInDays } from "date-fns";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
 const HotelDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [checkIn, setCheckIn] = useState<Date>();
   const [checkOut, setCheckOut] = useState<Date>();
   const [guests, setGuests] = useState(1);
@@ -34,6 +37,12 @@ const HotelDetail = () => {
   };
 
   const handleBooking = () => {
+    if (!user) {
+      toast.error("예약하려면 로그인이 필요합니다");
+      navigate("/auth");
+      return;
+    }
+
     if (!checkIn || !checkOut || !hotel) {
       return;
     }
